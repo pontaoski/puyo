@@ -84,14 +84,14 @@ nc="$(tput sgr0)"
 
 
 
-function nocmd {
+function baioyen {
     echo "${red}You didn't ${green}specify a command."
     echo "${red}You can${green} do the following actions:"
     echo "    ${red}puyo ${green}in, install${red} packagename"
     echo "    ${red}puyo ${green}remove, rm${red} packagename"
     echo "    ${red}puyo ${green}dup"
 }
-function check {
+function batankyu {
     if [ -z "$2" ]
     then
         echo "${red}Error: no ${green}package name specified.."
@@ -101,20 +101,20 @@ function check {
 echo -e "${red}loading up ${green}puyo package manager${nc}"
 case "$1" in
     in|install)
-        check 
+        batankyu "$@"
         echo "${red}Installing ${green}${@:2}..."
         sudo pacman -S --noconfirm "${@:2}"
         ;;
     remove|rm)
-        check
+        batankyu "$@"
         echo "${red}Removing ${green}${@:2}..."
         sudo pacman -Rns --noconfirm "{$@:2}"
         ;;
-    dup) 
+    dup)
         echo "${red}Updating your system. ${green}This can take a while."
         sudo pacman -Syu --noconfirm
         ;;
-    *) nocmd;;
+    *) baioyen;;
 esac
 case "$1" in
     in|install) echo "${green}${@:2}${red} has been installed.";;
