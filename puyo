@@ -86,7 +86,7 @@ function puyoexists {
 	if pacman -Ss "^$1$" > /dev/null ; then
   	 echo ""
 	else
- 	 echo "${red}Package not found: ${green}$1"
+ 	 echo "${red}Package not found: ${green}$1${nc}"
 	 exit
 	fi
 }
@@ -101,7 +101,7 @@ function puyocmds {
 function puyocheck {
     if [ -z "$2" ]
     then
-        echo "${red}Error: no ${green}package name specified.."
+        echo "${red}Error: no ${green}package name specified..${nc}"
         exit 1
     fi
 }
@@ -115,7 +115,7 @@ function puyoinpkg {
         if test -f "$1" > /dev/null ; then
          echo "${red}Installing ${green}$1."
         else
-         echo "${red}File not found: ${green}$1"
+         echo "${red}File not found: ${green}$1${nc}"
          exit
         fi
 }
@@ -124,7 +124,8 @@ function puyoask {
  case "$choice" in 
     y|Y )
     ;;
-    n|N ) 
+    n|N )
+	echo "${nc}"
     exit
     ;;
     * )
@@ -165,4 +166,4 @@ case "$1" in
     dup) echo "${red}Your system has been updated.";;
     *) ;;
 esac
-
+echo "${nc}"
