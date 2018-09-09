@@ -3,7 +3,7 @@ if [[ $EUID -eq 0 ]]; then
     echo "$(tput setaf 1)Do not run puyo as $(tput setaf 2)root!"
     exit 1
 fi
-# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.1
+# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.2
 #
 #                                                                                              ,'++++++++;.           
 #                 ```                                  `:'''';,`                            :++++++'''++++++'.        
@@ -75,38 +75,52 @@ fi
 black="$(tput setaf 0)"
 red="$(tput setaf 1)"
 green="$(tput setaf 2)"
-yellow="($tput setaf 3)"
+yellow="$(tput setaf 3)"
 blue="$(tput setaf 4)"
 magenta="$(tput setaf 5)"
 cyan="$(tput setaf 6)"
 white="$(tput setaf 7)"
 nc="$(tput sgr0)"
 
-
-
-function baioyen {
+function puyoexists {
+	if pacman -Ss "^$1$" > /dev/null ; then
+  	 echo ""
+	else
+ 	 echo "${red}Package not found: ${green}$1"
+	 exit
+	fi
+}
+function puyocmds {
     echo "${red}You didn't ${green}specify a command."
     echo "${red}You can${green} do the following actions:"
     echo "    ${red}puyo ${green}in, install${red} packagename"
     echo "    ${red}puyo ${green}remove, rm${red} packagename"
     echo "    ${red}puyo ${green}dup, upgrade, up, update"
 }
-function batankyu {
+function puyocheck {
     if [ -z "$2" ]
     then
         echo "${red}Error: no ${green}package name specified.."
-        exit 0
+        exit 1
     fi
+}
+function puyopkg {
+ for pack in $@
+ do
+  puyoexists $pack
+ done
 }
 echo -e "${red}loading up ${green}puyo package manager${nc}"
 case "$1" in
     in|install)
-        batankyu "$@"
+        puyocheck "$@"
+	puyopkg "${@:2}"
         echo "${red}Installing ${green}${@:2}..."
         sudo pacman -S --noconfirm "${@:2}"
         ;;
     remove|rm)
-        batankyu "$@"
+	puyopkg "$@"
+        puyocheck "${@:2}"
         echo "${red}Removing ${green}${@:2}..."
         sudo pacman -Rns --noconfirm "{$@:2}"
         ;;
@@ -114,7 +128,7 @@ case "$1" in
         echo "${red}Updating your system. ${green}This can take a while."
         sudo pacman -Syu --noconfirm
         ;;
-    *) baioyen;;
+    *) puyocmds;;
 esac
 case "$1" in
     in|install) echo "${green}${@:2}${red} has been installed.";;
