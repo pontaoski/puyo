@@ -3,7 +3,7 @@ if [[ $EUID -eq 0 ]]; then
     echo "$(tput setaf 1)Do not run puyo as $(tput setaf 2)root!"
     exit 1
 fi
-# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.2
+# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.3
 #
 #                                                                                              ,'++++++++;.           
 #                 ```                                  `:'''';,`                            :++++++'''++++++'.        
@@ -96,6 +96,7 @@ function puyocmds {
     echo "    ${red}puyo ${green}in, install${red} packagename"
     echo "    ${red}puyo ${green}remove, rm${red} packagename"
     echo "    ${red}puyo ${green}dup, upgrade, up, update"
+    echo "    ${red}puyo ${green}package, pkg"
 }
 function puyocheck {
     if [ -z "$2" ]
@@ -110,23 +111,51 @@ function puyopkg {
   puyoexists $pack
  done
 }
+function puyoinpkg {
+        if test -f "$1" > /dev/null ; then
+         echo "${red}Installing ${green}$1."
+        else
+         echo "${red}File not found: ${green}$1"
+         exit
+        fi
+}
+function puyoask {
+ read -p "${red}Do you want to continue? ${green}[Y/n] " choice
+ case "$choice" in 
+    y|Y )
+    ;;
+    n|N ) 
+    exit
+    ;;
+    * )
+    ;;
+ esac
+}
 echo -e "${red}loading up ${green}puyo package manager${nc}"
 case "$1" in
     in|install)
         puyocheck "$@"
 	puyopkg "${@:2}"
         echo "${red}Installing ${green}${@:2}..."
-        sudo pacman -S --noconfirm "${@:2}"
+        puyoask
+        sudo pacman -S --noconfirm "${@:2}" >/dev/null
         ;;
     remove|rm)
 	puyopkg "$@"
         puyocheck "${@:2}"
         echo "${red}Removing ${green}${@:2}..."
-        sudo pacman -Rns --noconfirm "{$@:2}"
+	puyoask
+        sudo pacman -Rns --noconfirm "${@:2}" >/dev/null
         ;;
     dup|upgrade|up|update)
         echo "${red}Updating your system. ${green}This can take a while."
-        sudo pacman -Syu --noconfirm
+        puyoask
+        sudo pacman -Syu --noconfirm >/dev/null
+        ;;
+    package|pkg)
+	puyoinpkg "${@:2}"
+        puyoask
+	sudo pacman -U "${@:2}" --noconfirm >/dev/null
         ;;
     *) puyocmds;;
 esac
