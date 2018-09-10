@@ -81,13 +81,12 @@ magenta="$(tput setaf 5)"
 cyan="$(tput setaf 6)"
 white="$(tput setaf 7)"
 nc="$(tput sgr0)"
-
+aur="no"
 function puyoexists {
 	if pacman -Ss "^$1$" > /dev/null ; then
   	 echo ""
-	else
- 	 echo "${red}Package not found: ${green}$1${nc}"
-	 exit
+	else # if not in main repos pass to aur tester
+ 	 puyoexistsaur $@
 	fi
 }
 
@@ -95,7 +94,7 @@ function puyoexistsaur {
 yay -Ss "$1" | grep "aur/$1 " >/dev/null
     if [ $? -eq 0 ];
 	then
-     echo ""
+     aur="yes"
     else
      echo "${red}Package not found: ${green}$1${nc}"
      exit
@@ -104,11 +103,11 @@ yay -Ss "$1" | grep "aur/$1 " >/dev/null
 function puyocmds {
     echo "${red}You didn't ${green}specify a command."
     echo "${red}You can${green} do the following actions:"
-    echo "    ${red}puyo ${green}in, install${red} packagename"
-    echo "    ${red}puyo ${green}remove, rm${red} packagename"
-    echo "    ${red}puyo ${green}dup, upgrade, up, update"
-    echo "    ${red}puyo ${green}package, pkg"
-    echo "    ${red}puyo ${green}install-aur, inaur"
+    echo "    ${red}puyo ${green}in, install${red} packagename${nc} - Installs a package. You can use both main and AUR packages."
+    echo "    ${red}puyo ${green}remove, rm${red} packagename${nc} - Removes a package."
+    echo "    ${red}puyo ${green}dup, upgrade, up, update${nc} - Updates your system."
+    echo "    ${red}puyo ${green}package, pkg${nc} - Installs a package from a pkg.tar.xz file."
+    echo "    ${red}puyo ${green}install-aur, inaur${nc} - Installs a package from the AUR. Use this if install doesn't work for an AUR package."
 }
 function puyocheck {
     if [ -z "$2" ]
@@ -150,14 +149,19 @@ function puyoask {
     ;;
  esac
 }
-echo -e "${red}loading up ${green}puyo package manager${nc}"
+echo -e "${red}loading up ${green}puyo wrapper${nc}"
 case "$1" in
     in|install)
-        puyocheck "$@"
-	puyopkg "${@:2}"
+        puyocheck "$@" #check if there's a package
+	    puyopkg "${@:2}" # go through all these packages and see if they're in the repos
         echo "${red}Installing ${green}${@:2}..."
         puyoask
-        sudo pacman -S --noconfirm "${@:2}" >/dev/null
+		if [ "$aur" = "no" ]
+		then
+        	sudo pacman -S --noconfirm "${@:2}" >/dev/null
+		else
+			yay -S --noconfirm "${@:2}"
+		fi
         ;;
     remove|rm)
         echo "${red}Removing ${green}${@:2}..."
