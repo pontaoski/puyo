@@ -160,11 +160,9 @@ case "$1" in
         sudo pacman -S --noconfirm "${@:2}" >/dev/null
         ;;
     remove|rm)
-	    puyopkg "${@:2}"
-        puyocheck "${@:2}"
         echo "${red}Removing ${green}${@:2}..."
-	puyoask
-        sudo pacman -Rns --noconfirm "${@:2}" >/dev/null
+    	puyoask
+        sudo pacman -Rns --noconfirm "${@:2}"
         ;;
     dup|upgrade|up|update)
         echo "${red}Updating your system. ${green}This can take a while."
