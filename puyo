@@ -90,6 +90,17 @@ function puyoexists {
 	 exit
 	fi
 }
+
+function puyoexistsaur {
+yay -Ss "$1" | grep "aur/$1 " >/dev/null
+    if [ $? -eq 0 ];
+	then
+     echo ""
+    else
+     echo "${red}Package not found: ${green}$1${nc}"
+     exit
+    fi
+}
 function puyocmds {
     echo "${red}You didn't ${green}specify a command."
     echo "${red}You can${green} do the following actions:"
@@ -97,6 +108,7 @@ function puyocmds {
     echo "    ${red}puyo ${green}remove, rm${red} packagename"
     echo "    ${red}puyo ${green}dup, upgrade, up, update"
     echo "    ${red}puyo ${green}package, pkg"
+    echo "    ${red}puyo ${green}install-aur, inaur"
 }
 function puyocheck {
     if [ -z "$2" ]
@@ -111,6 +123,12 @@ function puyopkg {
   puyoexists $pack
  done
 }
+function puyopkgaur {
+ for pack in $@
+ do
+  puyoexistsaur $pack
+ done
+}
 function puyoinpkg {
         if test -f "$1" > /dev/null ; then
          echo "${red}Installing ${green}$1."
@@ -121,7 +139,7 @@ function puyoinpkg {
 }
 function puyoask {
  read -p "${red}Do you want to continue? ${green}[Y/n] " choice
- case "$choice" in 
+ case "$choice" in
     y|Y )
     ;;
     n|N )
@@ -142,7 +160,7 @@ case "$1" in
         sudo pacman -S --noconfirm "${@:2}" >/dev/null
         ;;
     remove|rm)
-	puyopkg "$@"
+	    puyopkg "${@:2}"
         puyocheck "${@:2}"
         echo "${red}Removing ${green}${@:2}..."
 	puyoask
@@ -154,10 +172,16 @@ case "$1" in
         sudo pacman -Syu --noconfirm >/dev/null
         ;;
     package|pkg)
-	puyoinpkg "${@:2}"
+		puyoinpkg "${@:2}"
         puyoask
 	sudo pacman -U "${@:2}" --noconfirm >/dev/null
         ;;
+	install-aur|inaur) 
+		puyocheck "$@"
+		puyopkgaur "${@:2}"
+		puyoask
+		yay -S --noconfirm "${@:2}"
+		;;
     *) puyocmds;;
 esac
 case "$1" in
