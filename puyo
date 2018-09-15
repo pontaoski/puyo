@@ -109,6 +109,8 @@ function puyocmds {
     echo "    ${nc}puyo ${green}dup, upgrade, up, update${nc} - Updates your system."
     echo "    ${nc}puyo ${green}package, pkg${nc} - Installs a package from a pkg.tar.xz file."
     echo "    ${nc}puyo ${green}install-aur, inaur${nc} - Installs a package from the AUR. Use this if install doesn't work for an AUR package."
+	echo "    ${nc}puyo ${green}install-puylet, inpuylet${nc} - Installs a puylet."
+	echo "    ${nc}puyo ${green}remove-puylet, rmpuylet${nc} - Removes a puylet."
 }
 function puyocheck {
     if [ -z "$2" ]
