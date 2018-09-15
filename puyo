@@ -3,7 +3,7 @@ if [[ $EUID -eq 0 ]]; then
     echo "$(tput setaf 1)Do not run puyo as $(tput setaf 2)root!"
     exit 1
 fi
-# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.3
+# puyo, the overly friendly pacman wrapper. for those who don't like soup. version 0.7
 #
 #                                                                                              ,'++++++++;.           
 #                 ```                                  `:'''';,`                            :++++++'''++++++'.        
