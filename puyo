@@ -82,6 +82,7 @@ cyan="$(tput setaf 6)"
 white="$(tput setaf 7)"
 nc="$(tput sgr0)"
 aur="no"
+puyo="$HOME/.puyo"
 function puyoexists {
 	if pacman -Ss "^$1$" > /dev/null ; then
   	 echo ""
@@ -101,13 +102,13 @@ yay -Ss "$1" | grep "aur/$1 " >/dev/null
     fi
 }
 function puyocmds {
-    echo "${red}You didn't ${green}specify a command."
-    echo "${red}You can${green} do the following actions:"
-    echo "    ${red}puyo ${green}in, install${red} packagename${nc} - Installs a package. You can use both main and AUR packages."
-    echo "    ${red}puyo ${green}remove, rm${red} packagename${nc} - Removes a package."
-    echo "    ${red}puyo ${green}dup, upgrade, up, update${nc} - Updates your system."
-    echo "    ${red}puyo ${green}package, pkg${nc} - Installs a package from a pkg.tar.xz file."
-    echo "    ${red}puyo ${green}install-aur, inaur${nc} - Installs a package from the AUR. Use this if install doesn't work for an AUR package."
+    echo "${nc}You didn't specify a command."
+    echo "${nc}You can${green} do the following actions:"
+    echo "    ${nc}puyo ${green}in, install${nc} packagename${nc} - Installs a package. You can use both main and AUR packages."
+    echo "    ${nc}puyo ${green}remove, rm${nc} packagename${nc} - Removes a package."
+    echo "    ${nc}puyo ${green}dup, upgrade, up, update${nc} - Updates your system."
+    echo "    ${nc}puyo ${green}package, pkg${nc} - Installs a package from a pkg.tar.xz file."
+    echo "    ${nc}puyo ${green}install-aur, inaur${nc} - Installs a package from the AUR. Use this if install doesn't work for an AUR package."
 }
 function puyocheck {
     if [ -z "$2" ]
@@ -130,14 +131,14 @@ function puyopkgaur {
 }
 function puyoinpkg {
         if test -f "$1" > /dev/null ; then
-         echo "${red}Installing ${green}$1."
+         echo "Installing ${green}$1."
         else
-         echo "${red}File not found: ${green}$1${nc}"
+         echo "File not found: ${green}$1${nc}"
          exit
         fi
 }
 function puyoask {
- read -p "${red}Do you want to continue? ${green}[Y/n] " choice
+ read -p "${nc}Do you want to continue? ${green}[Y/n]${nc} " choice
  case "$choice" in
     y|Y )
     ;;
@@ -149,12 +150,73 @@ function puyoask {
     ;;
  esac
 }
-echo -e "${red}loading up ${green}puyo wrapper${nc}"
+function fetch {
+		{
+		mkdir -p "$puyo/pkgs/"
+		} &> /dev/null
+		source $2
+		if [ -z "$file" ]; then
+			echo "You seem to be installing from an invalid puylet."
+		fi
+		wget -P ~/.puyo/pkgs/ "$file"
+}
+function puylet {
+
+case "$1" in
+	install)
+		fetch $@
+		{
+		finder=$(find "$puyo/pkgs/" | grep "$2")
+		lengths=$(find "$puyo/pkgs/" | grep -c "$2")
+		source $2
+		} &> /dev/null
+		if (( lengths == 1 )); then
+			lengths=lengths
+		else
+			echo "We didn't find your package."
+		exit 1
+		fi
+		{
+		mkdir -p "$puyo/temp/"
+		cp "$finder" "$puyo/temp/"
+		ls "$puyo/temp/"
+		filename="$name.tar.gz"
+		tar -xvf "$puyo/temp/$filename" -C "$puyo/temp/"
+		rm "$puyo/temp/$filename"
+		mkdir -p "$puyo/installed/"
+		mkdir -p "$dir"
+		mv "$puyo/temp/$name" "$puyo/installed/"
+		} &> /dev/null
+		sudo mv "$puyo/temp/"* "$dir"
+	;;
+	uninstall)
+		{
+		lengths=$(find "$puyo/installed/" | grep -c "$2")
+		} &> /dev/null
+		if ((lengths == 1 )); then
+			lengths=lengths
+		else
+			echo "$2 is not installed!"
+			exit 1
+		fi
+		{
+		name="$2"
+		source "$puyo/installed/$name"
+		for file in $files
+		do
+			sudo rm $file
+		done
+		rm "$puyo/installed/$name"
+		} &> /dev/null
+	;;
+esac
+
+}
 case "$1" in
     in|install)
         puyocheck "$@" #check if there's a package
 	    puyopkg "${@:2}" # go through all these packages and see if they're in the repos
-        echo "${red}Installing ${green}${@:2}..."
+        echo "${nc}Installing ${green}${@:2}..."
         puyoask
 		if [ "$aur" = "no" ]
 		then
@@ -164,12 +226,12 @@ case "$1" in
 		fi
         ;;
     remove|rm)
-        echo "${red}Removing ${green}${@:2}..."
+        echo "${nc}Removing ${green}${@:2}..."
     	puyoask
         sudo pacman -Rns --noconfirm "${@:2}"
         ;;
     dup|upgrade|up|update)
-        echo "${red}Updating your system. ${green}This can take a while."
+        echo "${nc}Updating your system. ${green}This can take a while."
         puyoask
         sudo pacman -Syu --noconfirm >/dev/null
         ;;
@@ -183,13 +245,23 @@ case "$1" in
 		puyopkgaur "${@:2}"
 		puyoask
 		yay -S --noconfirm "${@:2}"
-		;;
+	;;
+    install-puylet|inpuylet)
+	puyocheck "$@"
+	echo "${nc}Installing ${green}${@:2}..."
+	puylet install "$2"
+    	;;
+    remove-puylet|rmpuylet)
+	puyocheck "$@"
+	echo "${nc}Removing ${green}${@:2}..."
+	puylet uninstall "$2"
+	;;
     *) puyocmds;;
 esac
 case "$1" in
-    in|install) echo "${green}${@:2}${red} has been installed.";;
-    remove|rm) echo "${green}${@:2}${red} has been removed.";;
-    dup) echo "${red}Your system has been updated.";;
+    in|install) echo "${green}${@:2}${nc} has been installed.";;
+    remove|rm) echo "${green}${@:2}${nc} has been removed.";;
+    dup) echo "${nc}Your system has been updated.";;
     *) ;;
 esac
 echo "${nc}"
