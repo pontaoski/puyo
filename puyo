@@ -258,6 +258,9 @@ case "$1" in
 	echo "${nc}Removing ${green}${@:2}..."
 	puylet uninstall "$2"
 	;;
+	autoremove)
+	sudo pacman -Rns $(pacman -Qtdq)
+	;;
     *) puyocmds;;
 esac
 case "$1" in
